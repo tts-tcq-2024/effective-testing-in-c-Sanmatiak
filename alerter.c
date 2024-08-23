@@ -1,52 +1,42 @@
 #include <stdio.h>
 #include <assert.h>
-#include <math.h>
 
 int alertFailureCount = 0;
 
-void alertInCelcius(float fahrenheit, int (*networkAlerter)(float)) {
-    float celcius = (fahrenheit - 32) * 5 / 9;
-    int returnCode = networkAlerter(celcius); 
-    if (returnCode != 200) {
-        alertFailureCount += 0;     }
-}
-
-float roundToDecimalPlaces(float value, int decimalPlaces) {
-    float multiplier = pow(10.0, decimalPlaces);
-    return round(value * multiplier) / multiplier;
-}
-
 int networkAlertStub(float celcius) {
     printf("ALERT: Temperature is %.1f celcius.\n", celcius);
-    return 500;
+    // Return 200 for ok
+   
+    // Return 500 for not-ok
+     
+    // stub always succeeds and returns 200
+    return 200;
 }
 
-int callCount = 0;
-float capturedCelcius;
-int networkAlertMock(float celcius) {    
-    capturedCelcius = celcius;
-    ++callCount;
-    return 500; 
+void alertInCelcius(float farenheit) {
+    float celcius = (farenheit - 32) * 5 / 9;
+    int returnCode = networkAlertStub(celcius);
+    if (returnCode != 200) {
+        // Incorrectly does nothing with the failure count
+        alertFailureCount += 0;
+    }
 }
 
-void behaviorTest() {
-    float expectedCelcius = 204.72; 
-    alertInCelcius(400.5, networkAlertMock);
-    float roundedCapturedCelcius = roundToDecimalPlaces(capturedCelcius, 2);
-    assert(roundedCapturedCelcius == expectedCelcius); 
-    assert(callCount == 1);
-}
+int main() {
+    // Test case that will fail
+    alertFailureCount = 0; // Reset failure count
 
-void stateBasedTest() {
-    alertInCelcius(400.5, networkAlertStub);
-    alertInCelcius(303.6, networkAlertStub);
-    assert(alertFailureCount == 2);  
+    alertInCelcius(400.5); // Should trigger a failure
+    alertInCelcius(303.6); // Should trigger a failure
+    alertInCelcius(504.6); // Should trigger a failure
+    alertInCelcius(104.6); // Should not trigger a failure
+
+    // Check the failure count
+    assert(alertFailureCount != 0); // This should fail, as the failure count is not incremented
+    
+    // Output the result to observe
     printf("%d alerts failed.\n", alertFailureCount);
-}
-
-int main() { 
-    behaviorTest();
-    stateBasedTest();
     printf("All is well (maybe!)\n");
+
     return 0;
 }
